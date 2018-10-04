@@ -44,6 +44,7 @@ class Serializer {
         action.put("action", translateAction(intent.getAction()));
         action.put("exit", readExitOnSent(intent.getExtras()));
         action.put("items", items);
+	action.put("text", intent.getExtras().get(Intent.EXTRA_TEXT));
         return action;
     }
 
