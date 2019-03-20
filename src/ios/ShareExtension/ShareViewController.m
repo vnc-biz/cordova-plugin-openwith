@@ -111,18 +111,21 @@
 
     // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
     for (NSItemProvider* itemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
-        
+
         if ([itemProvider hasItemConformingToTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER]) {
             [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
-            
+
             [itemProvider loadItemForTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
-                
+
                 NSData *data;
                 if([(NSObject*)item isKindOfClass:[NSURL class]]) {
                     data = [NSData dataWithContentsOfURL:(NSURL*)item];
                 }
                 if([(NSObject*)item isKindOfClass:[UIImage class]]) {
                     data = UIImagePNGRepresentation((UIImage*)item);
+                }
+                if([(NSObject*)item isKindOfClass:[NSData class]]) {
+                  data = (NSData *)item;
                 }
 
                 NSString *suggestedName = @"";
@@ -153,15 +156,15 @@
 
                 // Not allowed:
                 // [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
-                
+
                 // Crashes:
                 // [self.extensionContext openURL:[NSURL URLWithString:url] completionHandler:nil];
-                
+
                 // From https://stackoverflow.com/a/25750229/2343390
                 // Reported not to work since iOS 8.3
                 // NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
                 // [self.webView loadRequest:request];
-                
+
                 [self openURL:[NSURL URLWithString:url]];
 
                 // Inform the host that we're done, so it un-blocks its UI.
@@ -225,6 +228,7 @@
     // Wallet - com.apple.Passbook
     // Watch - com.apple.Bridge
     // Weather - com.apple.weather
+    if ([bundleId isEqualToString:@"com.apple.mobilesafari"]) return @"mobilesafari://";
     return nil;
 }
 
