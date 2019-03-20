@@ -126,6 +126,16 @@
                 }
                 if([(NSObject*)item isKindOfClass:[NSData class]]) {
                   data = (NSData *)item;
+
+                  // http://hayageek.com/plist-tutorial/
+                  NSError * error=nil;
+                  NSPropertyListFormat format=NSPropertyListXMLFormat_v1_0;
+                  NSArray *plist = [NSPropertyListSerialization propertyListWithData:data
+                                                                       options:NSPropertyListImmutable
+                                                                        format:&format error:&error] ;
+                  if (error == nil){
+                      data = [plist[0] dataUsingEncoding:NSUTF8StringEncoding]; // 0 element is a link
+                  }
                 }
 
                 NSString *suggestedName = @"";
