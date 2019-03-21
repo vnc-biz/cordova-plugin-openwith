@@ -172,6 +172,21 @@ function initOpenwithPlugin (root) {
     }
   }
 
+  openwith.readFileAsBase64FromSharedAppGroupContainer = function (successCallback, errorCallback) {
+    var loadSuccess = function (base64) {
+      if (successCallback) {
+        successCallback(base64)
+      }
+    }
+    var loadError = function (err) {
+      if (errorCallback) {
+        errorCallback(err)
+      }
+    }
+
+    cordova.exec(loadSuccess, loadError, PLUGIN_NAME, 'readFileAsBase64FromSharedAppGroupContainer', [fileUrl])
+  }
+
   openwith.exit = function () {
     log(DEBUG, 'exit()')
     cordova.exec(null, null, PLUGIN_NAME, 'exit', [])

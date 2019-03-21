@@ -284,6 +284,23 @@ static NSDictionary* launchOptions = nil;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void) readFileAsBase64FromSharedAppGroupContainer:(CDVInvokedUrlCommand*)command {
+    NSString *filePath = [[command.arguments objectAtIndex:0] stringValue];
+
+    [self debug:[NSString stringWithFormat:@"[readFileAsBase64FromSharedAppGroupContainer] %@", filePath]];
+
+    [self.commandDelegate runInBackground:^{
+      NSError *error;
+      NSFileManager *fileManager = [NSFileManager defaultManager];
+      NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:filePath]];
+
+      CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{
+          @"base64": [data convertToBase64]
+      }];
+      [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
+}
+
 // Exit after sharing
 - (void) exit:(CDVInvokedUrlCommand*)command {
     [self debug:[NSString stringWithFormat:@"[exit] %@", self.backURL]];

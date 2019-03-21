@@ -119,7 +119,26 @@
 
                 NSData *data;
                 if([(NSObject*)item isKindOfClass:[NSURL class]]) {
-                    data = [NSData dataWithContentsOfURL:(NSURL*)item];
+                    // data = [NSData dataWithContentsOfURL:(NSURL*)item];
+
+                    // just pass an url instead of a big contnent (do not work for big videos)
+                    NSURL *sharingUrl = (NSURL*)item;
+
+                    NSURL *groupPath = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier: SHAREEXT_GROUP_IDENTIFIER];
+                    NSString *groupPathAbsoluteString = groupPath.path;
+                    //
+                    NSString *destPath = [groupPathAbsoluteString stringByAppendingPathComponent:[sharingUrl lastPathComponent]];
+
+                    NSError *error;
+                    NSFileManager* fileManager = [NSFileManager defaultManager];
+                    if ([fileManager copyItemAtPath:[sharingUrl path] toPath:destPath error:&error]) {
+                        data = [destPath dataUsingEncoding:NSUTF8StringEncoding];
+                    } else {
+                        if (error.code == NSFileWriteFileExistsError) {
+                            // already exists
+                            data = [destPath dataUsingEncoding:NSUTF8StringEncoding];
+                        }
+                    }
                 }
                 if([(NSObject*)item isKindOfClass:[UIImage class]]) {
                     data = UIImagePNGRepresentation((UIImage*)item);
