@@ -172,10 +172,12 @@ function initOpenwithPlugin (root) {
     }
   }
 
-  openwith.readFileAsBase64FromSharedAppGroupContainer = function (successCallback, errorCallback) {
-    var loadSuccess = function (base64) {
+  openwith.readFileAsBase64FromSharedAppGroupContainer = function (fileUrl, successCallback, errorCallback) {
+    log(DEBUG, 'readFileAsBase64FromSharedAppGroupContainer ' + fileUrl);
+
+    var loadSuccess = function (data) {
       if (successCallback) {
-        successCallback(base64)
+        successCallback(data.base64)
       }
     }
     var loadError = function (err) {

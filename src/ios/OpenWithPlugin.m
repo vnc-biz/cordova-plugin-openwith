@@ -290,9 +290,8 @@ static NSDictionary* launchOptions = nil;
     [self debug:[NSString stringWithFormat:@"[readFileAsBase64FromSharedAppGroupContainer] %@", filePath]];
 
     [self.commandDelegate runInBackground:^{
-      NSError *error;
-      NSFileManager *fileManager = [NSFileManager defaultManager];
-      NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:filePath]];
+      NSURL *sharingUrl = [NSURL URLWithString:filePath];
+      NSData *data = [[NSFileManager defaultManager] contentsAtPath:[sharingUrl path]];
 
       CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{
           @"base64": [data convertToBase64]
