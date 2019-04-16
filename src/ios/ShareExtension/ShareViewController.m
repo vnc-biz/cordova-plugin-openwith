@@ -259,7 +259,9 @@
     // Weather - com.apple.weather
     if ([bundleId isEqualToString:@"com.apple.mobilesafari"]) return @"mobilesafari://";
     if ([bundleId isEqualToString:@"com.apple.SafariViewService"]) return @"mobilesafari://";
-    return nil;
+    if ([bundleId isEqualToString:@"com.google.chrome.ios"]) return @"googlechromes://"; // https://developer.chrome.com/multidevice/ios/links
+    
+    return @"mobilesafari://";
 }
 
 // This is called at the point where the Post dialog is about to be shown.
