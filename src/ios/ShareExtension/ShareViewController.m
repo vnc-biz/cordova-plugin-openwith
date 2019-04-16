@@ -258,6 +258,7 @@
     // Watch - com.apple.Bridge
     // Weather - com.apple.weather
     if ([bundleId isEqualToString:@"com.apple.mobilesafari"]) return @"mobilesafari://";
+    if ([bundleId isEqualToString:@"com.apple.SafariViewService"]) return @"mobilesafari://";
     return nil;
 }
 
