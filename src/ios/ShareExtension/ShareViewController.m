@@ -109,6 +109,13 @@
     [self setup];
     [self debug:@"[didSelectPost]"];
 
+    NSUInteger attachmentsCount = [((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments count];
+    if (attachmentsCount == 0){
+        // Inform the host that we're done, so it un-blocks its UI.
+        [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+        return;
+    }
+
     // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
     for (NSItemProvider* itemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
 
@@ -157,6 +164,12 @@
                   }
                 }
 
+                // Firefox url sharing case
+               if([(NSObject*)item isKindOfClass:[NSString class]]) {
+                    // ignore sharing text, it's already in 'self.contentText'
+                    return;
+               }
+
                 NSString *suggestedName = @"";
                 if ([itemProvider respondsToSelector:NSSelectorFromString(@"getSuggestedName")]) {
                     suggestedName = [itemProvider valueForKey:@"suggestedName"];
@@ -200,12 +213,12 @@
                 [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
             }];
 
-            return;
+            // return;
         }
     }
 
     // Inform the host that we're done, so it un-blocks its UI.
-    [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+    // [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
 }
 
 - (NSArray*) configurationItems {
@@ -260,7 +273,7 @@
     if ([bundleId isEqualToString:@"com.apple.mobilesafari"]) return @"mobilesafari://";
     if ([bundleId isEqualToString:@"com.apple.SafariViewService"]) return @"mobilesafari://";
     if ([bundleId isEqualToString:@"com.google.chrome.ios"]) return @"googlechromes://"; // https://developer.chrome.com/multidevice/ios/links
-    
+
     return @"mobilesafari://";
 }
 
