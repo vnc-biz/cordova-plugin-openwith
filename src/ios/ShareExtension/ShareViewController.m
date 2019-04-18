@@ -102,7 +102,15 @@
             break;
         }
     }
+
+    [self postNotificationName:@"kSharingExtensionShared"];
 }
+
+- (void)postNotificationName:(NSNotificationName)name {
+    CFNotificationCenterRef notification = CFNotificationCenterGetDarwinNotifyCenter() ;
+    CFNotificationCenterPostNotification(notification, (CFStringRef)name, NULL, NULL, YES);
+}
+
 
 - (void) didSelectPost {
 
@@ -124,12 +132,15 @@
 
             [itemProvider loadItemForTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
 
+                [self debug:[NSString stringWithFormat:@"item class = %@", [(NSObject*)item class]]];
+
                 NSData *data;
                 if([(NSObject*)item isKindOfClass:[NSURL class]]) {
                     // data = [NSData dataWithContentsOfURL:(NSURL*)item];
 
                     // just pass an url instead of a big contnent (do not work for big videos)
                     NSURL *sharingUrl = (NSURL*)item;
+                    [self debug:[NSString stringWithFormat:@"sharingUrl = %@", sharingUrl]];
 
                     NSURL *groupPath = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier: SHAREEXT_GROUP_IDENTIFIER];
                     NSString *groupPathAbsoluteString = groupPath.path;

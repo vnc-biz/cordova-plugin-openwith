@@ -55,6 +55,25 @@
 #define VERBOSITY_WARN  20
 #define VERBOSITY_ERROR 30
 
+
+@interface VNCDarwinObserver : NSObject
+
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) dispatch_block_t block;
+
+@end
+
+@implementation VNCDarwinObserver
+
+- (void)dealloc {
+
+    self.block = nil;
+    CFNotificationCenterRef notification = CFNotificationCenterGetDarwinNotifyCenter ();
+    CFNotificationCenterRemoveObserver(notification, (__bridge const void *)(self), (CFStringRef)self.name, NULL);
+}
+
+@end
+
 /*
  * State variables
  */
@@ -71,6 +90,7 @@ static NSDictionary* launchOptions = nil;
     NSUserDefaults *_userDefaults;
     int _verbosityLevel;
     NSString *_backURL;
+    VNCDarwinObserver *nObserver;
 }
 
 @property (nonatomic,retain) NSString* loggerCallback;
@@ -78,6 +98,7 @@ static NSDictionary* launchOptions = nil;
 @property (nonatomic) int verbosityLevel;
 @property (nonatomic,retain) NSUserDefaults *userDefaults;
 @property (nonatomic,retain) NSString *backURL;
+@property (nonatomic,retain) VNCDarwinObserver *nObserver;
 @end
 
 /*
@@ -91,6 +112,7 @@ static NSDictionary* launchOptions = nil;
 @synthesize verbosityLevel = _verbosityLevel;
 @synthesize userDefaults = _userDefaults;
 @synthesize backURL = _backURL;
+@synthesize nObserver = _nObserver;
 
 //
 // Retrieve launchOptions
@@ -152,7 +174,56 @@ static NSDictionary* launchOptions = nil;
     // [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(viewWillTransitionToSize:) name:CDVViewWillTransitionToSizeNotification object:nil];
     [self onReset];
     [self info:@"[pluginInitialize] OK"];
+
+    self.nObserver = [self addObserverForName:@"kSharingExtensionShared"
+                  usingBlock:^{
+                      [self debug:@"received kSharingExtensionShared notification"];
+                      [self checkForFileToShare];
+                  }];
 }
+
+///////
+
+- (id <NSObject>)addObserverForName:(NSNotificationName)name usingBlock:(dispatch_block_t)block  {
+
+    VNCDarwinObserver *observer = [[VNCDarwinObserver alloc] init];
+    observer.name = name;
+    observer.block = block;
+
+    CFNotificationCenterRef darwin_notification = CFNotificationCenterGetDarwinNotifyCenter();
+    CFNotificationCenterAddObserver(darwin_notification,
+                                    (__bridge const void *)(observer),
+                                    cyb_notification_handler,
+                                    (CFStringRef)name,
+                                    NULL,
+                                    CFNotificationSuspensionBehaviorDeliverImmediately);
+    return observer;
+}
+
+void cyb_notification_handler(CFNotificationCenterRef center,
+                              void *observer,
+                              CFStringRef name,
+                              const void *object,
+                              CFDictionaryRef userInfo) {
+
+    VNCDarwinObserver *darwinObserver = (__bridge VNCDarwinObserver *)(observer);
+
+    if (darwinObserver.block) {
+        darwinObserver.block();
+    }
+}
+
+- (void)removeObserver:(id)observer {
+    VNCDarwinObserver *observerToRemove = observer;
+    CFNotificationCenterRef notification = CFNotificationCenterGetDarwinNotifyCenter ();
+    CFNotificationCenterRemoveObserver(notification, (__bridge const void *)(observer), (CFStringRef)observerToRemove.name, NULL);
+
+    observerToRemove.block = nil;
+    observerToRemove.name = nil;
+}
+
+///////
+
 
 - (void) onReset {
     [self info:@"[onReset]"];
