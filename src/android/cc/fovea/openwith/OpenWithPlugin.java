@@ -133,7 +133,13 @@ public class OpenWithPlugin extends CordovaPlugin {
             log(WARN, "init() -> invalidAction");
             return false;
         }
-        onNewIntent(cordova.getActivity().getIntent());
+
+        Intent intt = cordova.getActivity().getIntent();
+        if (intt != null){
+          onNewIntent(intt);
+          cordova.getActivity().setIntent(null);
+        }
+
         log(DEBUG, "init() -> ok");
         return PluginResultSender.ok(context);
     }

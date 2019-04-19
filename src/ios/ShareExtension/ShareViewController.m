@@ -102,7 +102,15 @@
             break;
         }
     }
+
+    [self postNotificationName:@"kSharingExtensionShared"];
 }
+
+- (void)postNotificationName:(NSNotificationName)name {
+    CFNotificationCenterRef notification = CFNotificationCenterGetDarwinNotifyCenter() ;
+    CFNotificationCenterPostNotification(notification, (CFStringRef)name, NULL, NULL, YES);
+}
+
 
 - (void) didSelectPost {
 
@@ -121,8 +129,11 @@
 
         if ([itemProvider hasItemConformingToTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER]) {
             [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
+            [self debug:[NSString stringWithFormat:@"item registeredTypeIdentifiers = %@", itemProvider.registeredTypeIdentifiers]];
 
             [itemProvider loadItemForTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
+
+                [self debug:[NSString stringWithFormat:@"item class = %@", [(NSObject*)item class]]];
 
                 NSData *data;
                 if([(NSObject*)item isKindOfClass:[NSURL class]]) {
@@ -130,22 +141,9 @@
 
                     // just pass an url instead of a big contnent (do not work for big videos)
                     NSURL *sharingUrl = (NSURL*)item;
+                    [self debug:[NSString stringWithFormat:@"sharingUrl = %@", sharingUrl]];
 
-                    NSURL *groupPath = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier: SHAREEXT_GROUP_IDENTIFIER];
-                    NSString *groupPathAbsoluteString = groupPath.path;
-                    //
-                    NSString *destPath = [groupPathAbsoluteString stringByAppendingPathComponent:[sharingUrl lastPathComponent]];
-
-                    NSError *error;
-                    NSFileManager* fileManager = [NSFileManager defaultManager];
-                    if ([fileManager copyItemAtPath:[sharingUrl path] toPath:destPath error:&error]) {
-                        data = [destPath dataUsingEncoding:NSUTF8StringEncoding];
-                    } else {
-                        if (error.code == NSFileWriteFileExistsError) {
-                            // already exists
-                            data = [destPath dataUsingEncoding:NSUTF8StringEncoding];
-                        }
-                    }
+                    data = [self copyLocalFileUrlToSharedDir:sharingUrl];
                 }
                 if([(NSObject*)item isKindOfClass:[UIImage class]]) {
                     data = UIImagePNGRepresentation((UIImage*)item);
@@ -158,10 +156,22 @@
                   NSPropertyListFormat format=NSPropertyListXMLFormat_v1_0;
                   NSArray *plist = [NSPropertyListSerialization propertyListWithData:data
                                                                        options:NSPropertyListImmutable
-                                                                        format:&format error:&error] ;
+                                                                        format:&format error:&error];
+                  [self debug:[NSString stringWithFormat:@"plist = %@", plist]];
+
                   if (error == nil){
-                      data = [plist[0] dataUsingEncoding:NSUTF8StringEncoding]; // 0 element is a link
-                  }
+                      // 0 element is a link (web or to local file)
+                      NSString *fileUrl = plist[0];
+                      if([fileUrl hasPrefix:@"file:///"]) {
+                         // file url
+                         // public.file-url
+                         data = [self copyLocalFileUrlToSharedDir:[NSURL URLWithString:fileUrl]];
+                      } else {
+                         // web link
+                         // public.url
+                         data = [fileUrl dataUsingEncoding:NSUTF8StringEncoding];
+                      }
+                   }
                 }
 
                 // Firefox url sharing case
@@ -219,6 +229,26 @@
 
     // Inform the host that we're done, so it un-blocks its UI.
     // [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+}
+
+- (NSData *) copyLocalFileUrlToSharedDir:(NSURL *)sharingUrl {
+    NSURL *groupPath = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier: SHAREEXT_GROUP_IDENTIFIER];
+    NSString *groupPathAbsoluteString = groupPath.path;
+    //
+    NSString *destPath = [groupPathAbsoluteString stringByAppendingPathComponent:[sharingUrl lastPathComponent]];
+    [self debug:[NSString stringWithFormat:@"destPath = %@", destPath]];
+
+    NSError *error;
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    if ([fileManager copyItemAtPath:[sharingUrl path] toPath:destPath error:&error]) {
+        return [destPath dataUsingEncoding:NSUTF8StringEncoding];
+    } else {
+        if (error.code == NSFileWriteFileExistsError) {
+            // already exists
+            return [destPath dataUsingEncoding:NSUTF8StringEncoding];
+        }
+    }
+    return nil;
 }
 
 - (NSArray*) configurationItems {
