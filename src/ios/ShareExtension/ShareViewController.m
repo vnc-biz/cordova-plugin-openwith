@@ -146,7 +146,7 @@
                     data = [self copyLocalFileUrlToSharedDir:sharingUrl];
                 }
                 if([(NSObject*)item isKindOfClass:[UIImage class]]) {
-                    data = UIImagePNGRepresentation((UIImage*)item);
+                    data = [self copyImageToSharedDir:(UIImage*)item];
                 }
                 if([(NSObject*)item isKindOfClass:[NSData class]]) {
                   data = (NSData *)item;
@@ -232,10 +232,7 @@
 }
 
 - (NSData *) copyLocalFileUrlToSharedDir:(NSURL *)sharingUrl {
-    NSURL *groupPath = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier: SHAREEXT_GROUP_IDENTIFIER];
-    NSString *groupPathAbsoluteString = groupPath.path;
-    //
-    NSString *destPath = [groupPathAbsoluteString stringByAppendingPathComponent:[sharingUrl lastPathComponent]];
+    NSString *destPath = [[self groupPathAbsoluteString] stringByAppendingPathComponent:[sharingUrl lastPathComponent]];
     [self debug:[NSString stringWithFormat:@"destPath = %@", destPath]];
 
     NSError *error;
@@ -249,6 +246,21 @@
         }
     }
     return nil;
+}
+
+- (NSData *) copyImageToSharedDir:(UIImage *)sharingImg {
+    NSString *imageFileName = [NSString stringWithFormat:@"%@.png", [[NSProcessInfo processInfo] globallyUniqueString]];
+    NSString *destPath = [[self groupPathAbsoluteString] stringByAppendingPathComponent:imageFileName];
+    [self debug:[NSString stringWithFormat:@"destPath = %@", destPath]];
+
+    [UIImagePNGRepresentation(sharingImg) writeToFile:destPath atomically:YES];
+
+    return [destPath dataUsingEncoding:NSUTF8StringEncoding];
+}
+
+- (NSString *) groupPathAbsoluteString {
+    NSURL *groupPath = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier: SHAREEXT_GROUP_IDENTIFIER];
+    return groupPath.path;
 }
 
 - (NSArray*) configurationItems {
