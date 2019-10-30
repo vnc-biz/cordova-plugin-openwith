@@ -151,13 +151,23 @@ function projectPlistJson(context, projectName) {
 
 function getPreferences(context, configXml, projectName) {
   var plist = projectPlistJson(context, projectName);
+
   var group = "group." + plist.CFBundleIdentifier + BUNDLE_SUFFIX;
-  return [{
+  if (getCordovaParameter(configXml, 'IOS_GROUP_IDENTIFIER') !== "") {
+    group = getCordovaParameter(configXml, 'IOS_GROUP_IDENTIFIER');
+  }
+
+  var bundleIdentifier = plist.CFBundleIdentifier + BUNDLE_SUFFIX
+  if (getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER') !== "") {
+    bundleIdentifier = getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER');
+  }
+
+  let res = [{
     key: '__DISPLAY_NAME__',
     value: projectName
   }, {
     key: '__BUNDLE_IDENTIFIER__',
-    value: plist.CFBundleIdentifier + BUNDLE_SUFFIX
+    value: bundleIdentifier
   } ,{
     key: '__GROUP_IDENTIFIER__',
     value: group
@@ -174,6 +184,10 @@ function getPreferences(context, configXml, projectName) {
     key: '__UNIFORM_TYPE_IDENTIFIER__',
     value: getCordovaParameter(configXml, 'IOS_UNIFORM_TYPE_IDENTIFIER')
   }];
+
+  console.log("SHARING getPreferences", res);
+
+  return res
 }
 
 // Return the list of files in the share extension project, organized by type
@@ -244,6 +258,8 @@ module.exports = function (context) {
     }
 
     if (!target) {
+      console.log('ShareExt adding target.');
+
       // Add PBXNativeTarget to the project
       target = pbxProject.addTarget('ShareExt', 'app_extension', 'ShareExtension');
 
@@ -254,12 +270,36 @@ module.exports = function (context) {
       // Add a new PBXResourcesBuildPhase for the Resources used by the Share Extension
       // (MainInterface.storyboard)
       pbxProject.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
+
+
+      // Set proper PRODUCT_BUNDLE_IDENTIFIER for sharing extension
+      //
+      var bundleIdentifier;
+      preferences.forEach(p => {
+        if (p.key === '__BUNDLE_IDENTIFIER__') {
+          bundleIdentifier = p.value;
+        }
+      });
+      // console.log('ShareExt adding target, bundleIdentifier: ', bundleIdentifier);
+      //
+      var configs = pbxProject.pbxXCBuildConfigurationSection();
+      // console.log('ShareExt adding target, configs: ', configs);
+      //
+      for (var configName in configs) {
+         var config = configs[configName];
+         // console.log('ShareExt adding target, config: ', config);
+         if (config.buildSettings && (config.buildSettings.PRODUCT_NAME == 'ShareExt' || config.buildSettings.PRODUCT_NAME == '"ShareExt"')) {
+            console.log('ShareExt adding target, corrected PRODUCT_BUNDLE_IDENTIFIER for ', config.buildSettings.PRODUCT_NAME);
+            config.buildSettings['PRODUCT_BUNDLE_IDENTIFIER'] = bundleIdentifier;
+         }
+       }
+
     }
 
     // Create a separate PBXGroup for the shareExtensions files, name has to be unique and path must be in quotation marks
     var pbxGroupKey = pbxProject.findPBXGroupKey({name: 'ShareExtension'});
     if (pbxProject) {
-      console.log('    ShareExtension group already exists.');
+      console.log('ShareExtension group already exists.');
     }
     if (!pbxGroupKey) {
       pbxGroupKey = pbxProject.pbxCreateGroup('ShareExtension', 'ShareExtension');
