@@ -270,30 +270,6 @@ module.exports = function (context) {
       // Add a new PBXResourcesBuildPhase for the Resources used by the Share Extension
       // (MainInterface.storyboard)
       pbxProject.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
-
-
-      // Set proper PRODUCT_BUNDLE_IDENTIFIER for sharing extension
-      //
-      var bundleIdentifier;
-      preferences.forEach(p => {
-        if (p.key === '__BUNDLE_IDENTIFIER__') {
-          bundleIdentifier = p.value;
-        }
-      });
-      // console.log('ShareExt adding target, bundleIdentifier: ', bundleIdentifier);
-      //
-      var configs = pbxProject.pbxXCBuildConfigurationSection();
-      // console.log('ShareExt adding target, configs: ', configs);
-      //
-      for (var configName in configs) {
-         var config = configs[configName];
-         // console.log('ShareExt adding target, config: ', config);
-         if (config.buildSettings && (config.buildSettings.PRODUCT_NAME == 'ShareExt' || config.buildSettings.PRODUCT_NAME == '"ShareExt"')) {
-            console.log('ShareExt adding target, corrected PRODUCT_BUNDLE_IDENTIFIER for ', config.buildSettings.PRODUCT_NAME);
-            config.buildSettings['PRODUCT_BUNDLE_IDENTIFIER'] = bundleIdentifier;
-         }
-       }
-
     }
 
     // Create a separate PBXGroup for the shareExtensions files, name has to be unique and path must be in quotation marks
