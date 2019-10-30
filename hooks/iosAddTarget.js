@@ -158,9 +158,9 @@ function getPreferences(context, configXml, projectName) {
   }
 
   var bundleIdentifier = plist.CFBundleIdentifier + BUNDLE_SUFFIX
-  if (getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER') !== "") {
-    bundleIdentifier = getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER');
-  }
+  // if (getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER') !== "") {
+  //   bundleIdentifier = getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER');
+  // }
 
   let res = [{
     key: '__DISPLAY_NAME__',
