@@ -157,7 +157,8 @@ function getPreferences(context, configXml, projectName) {
     group = getCordovaParameter(configXml, 'IOS_GROUP_IDENTIFIER');
   }
 
-  var bundleIdentifier = plist.CFBundleIdentifier + BUNDLE_SUFFIX
+  var bundleIdentifier = plist.CFBundleIdentifier;
+  // var bundleIdentifier = plist.CFBundleIdentifier + BUNDLE_SUFFIX
   // if (getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER') !== "") {
   //   bundleIdentifier = getCordovaParameter(configXml, 'IOS_BUNDLE_IDENTIFIER');
   // }
@@ -165,9 +166,9 @@ function getPreferences(context, configXml, projectName) {
   let res = [{
     key: '__DISPLAY_NAME__',
     value: projectName
-  // }, {
-  //   key: '__BUNDLE_IDENTIFIER__',
-  //   value: bundleIdentifier
+  }, {
+    key: '__BUNDLE_IDENTIFIER__',
+    value: bundleIdentifier
   } ,{
     key: '__GROUP_IDENTIFIER__',
     value: group
