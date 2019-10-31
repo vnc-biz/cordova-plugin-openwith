@@ -165,9 +165,9 @@ function getPreferences(context, configXml, projectName) {
   let res = [{
     key: '__DISPLAY_NAME__',
     value: projectName
-  }, {
-    key: '__BUNDLE_IDENTIFIER__',
-    value: bundleIdentifier
+  // }, {
+  //   key: '__BUNDLE_IDENTIFIER__',
+  //   value: bundleIdentifier
   } ,{
     key: '__GROUP_IDENTIFIER__',
     value: group
