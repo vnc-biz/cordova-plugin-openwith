@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cc.fovea.cordova.openwith"
-    version="1.0.0">
+    version="2.1.0">
 
     <name>OpenWith</name>
 	<description>Cordova "Open With" plugin for iOS and Android</description>
@@ -75,8 +75,9 @@ SOFTWARE.
         </config-file>
 
         <hook type="before_plugin_install" src="hooks/npmInstall.js" />
-        <hook type="before_plugin_install" src="hooks/iosCopyShareExtension.js" />
-        <hook type="after_plugin_install" src="hooks/iosAddTarget.js" />
+        <hook type="after_plugin_install" src="hooks/iosCopyShareExtension.js" />
+        <hook type="before_prepare" src="hooks/iosCopyShareExtension.js" />
+        <hook type="after_prepare" src="hooks/iosAddTarget.js" />
         <hook type="before_plugin_uninstall" src="hooks/iosRemoveTarget.js" />
 
         <framework src="MobileCoreServices.framework" />
@@ -97,8 +98,7 @@ SOFTWARE.
                 <!-- category android:name="android.intent.category.BROWSABLE" / -->
                 <!-- See https://developer.android.com/guide/topics/manifest/data-element.html -->
                 <data android:mimeType="$ANDROID_MIME_TYPE" />
-		<action android:name="android.intent.action.SEND" />
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <action android:name="android.intent.action.SEND" />
                 $ANDROID_EXTRA_ACTIONS
                 <!-- action android:name="android.intent.action.VIEW" / -->
                 <!-- action android:name="android.intent.action.SEND_MULTIPLE" / -->
